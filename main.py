@@ -35,7 +35,6 @@ def main():
         stocks,
         crypto,
         run_pipeline,
-        RegimeInference,
         print_predictions,
         generate_all_plots,
         evaluate_run,
@@ -48,11 +47,10 @@ def main():
     symbols = args.symbols if args.symbols is not None else (stocks + crypto)
     print(f"Symbols: {symbols}\n")
 
-    res = run_pipeline(symbols=symbols, start=args.start, end=args.end, vol_window=30, n_states=3)
+    res = run_pipeline(symbols=symbols, start=args.start, end=args.end, vol_window=50, n_states=3)
 
     evaluate_run(res=res)
 
-    inf = RegimeInference(res)
     train_end = str(pd.Timestamp(res["wide"].index[-1]).date())
     print(f"\nTraining data ends on: {train_end}\n")
 
