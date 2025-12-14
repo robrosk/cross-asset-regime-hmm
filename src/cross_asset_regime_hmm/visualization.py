@@ -280,13 +280,29 @@ def plot_aggregate_regime_distributions(
 
     palette = {r: _get_regime_color(r) for r in df["regime"].unique()}
 
-    sns.violinplot(data=df, x="regime", y="avg_return", palette=palette, ax=axes[0])
+    sns.violinplot(
+        data=df,
+        x="regime",
+        y="avg_return",
+        hue="regime",
+        palette=palette,
+        legend=False,
+        ax=axes[0],
+    )
     axes[0].set_title("Aggregate Return Distribution by Regime")
     axes[0].set_xlabel("Regime")
     axes[0].set_ylabel("Mean Log Return (across assets)")
     axes[0].axhline(0, color="gray", linestyle="--", linewidth=0.8)
 
-    sns.violinplot(data=df, x="regime", y="avg_vol", palette=palette, ax=axes[1])
+    sns.violinplot(
+        data=df,
+        x="regime",
+        y="avg_vol",
+        hue="regime",
+        palette=palette,
+        legend=False,
+        ax=axes[1],
+    )
     axes[1].set_title("Aggregate Volatility Distribution by Regime")
     axes[1].set_xlabel("Regime")
     axes[1].set_ylabel("Mean Rolling Vol (across assets)")

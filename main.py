@@ -30,6 +30,7 @@ def main():
         run_pipeline,
         print_today_tomorrow_predictions,
         generate_all_plots,
+        evaluate_run,
     )
 
     # Parse end date to show prediction target
@@ -40,6 +41,9 @@ def main():
     print(f"Predicting regime for: {predict_dt.strftime('%Y-%m-%d')}\n")
 
     res = run_pipeline(symbols=stocks + crypto, start=args.start, end=args.end, vol_window=50, n_states=3)
+
+    evaluate_run(res=res)
+
     print_today_tomorrow_predictions(res=res)
 
     if args.plot or args.plot_dir:

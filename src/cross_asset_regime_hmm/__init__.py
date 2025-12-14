@@ -5,6 +5,7 @@ from .interpret import label_states_cross_asset
 from .pipeline import run_pipeline
 from .config import stocks, crypto
 from .inference import print_today_tomorrow_predictions
+from .evaluate import evaluate_run
 from .visualization import (
     generate_all_plots,
     plot_regime_timeline,
@@ -28,6 +29,7 @@ __all__ = [
     "stocks",
     "crypto",
     "print_today_tomorrow_predictions",
+    "evaluate_run",
     "generate_all_plots",
     "plot_regime_timeline",
     "plot_price_with_regimes",

@@ -40,7 +40,14 @@ def load_ohlcv_yfinance(symbols: list[str], start: str, end: str) -> dict[str, "
     """
     out = {}
     for sym in symbols:
-        df = yf.download(sym, start=start, end=end, progress=False, group_by="column")
+        df = yf.download(
+            sym,
+            start=start,
+            end=end,
+            progress=False,
+            group_by="column",
+            auto_adjust=False,
+        )
         df = df.dropna(how="all")
         out[sym] = standardize_ohlcv(df, sym)
 
