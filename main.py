@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime, timedelta
 import os
+import pandas as pd
 
 def main():
     parser = argparse.ArgumentParser(
@@ -28,23 +29,25 @@ def main():
         stocks,
         crypto,
         run_pipeline,
-        print_today_tomorrow_predictions,
+        RegimeInference,
+        print_predictions,
         generate_all_plots,
         evaluate_run,
     )
 
     # Parse end date to show prediction target
-    end_dt = datetime.strptime(args.end, "%Y-%m-%d")
-    predict_dt = end_dt + timedelta(days=1)
+    _ = datetime.strptime(args.end, "%Y-%m-%d")  # validate format
+    print(f"\nRequested window: {args.start} -> {args.end}")
 
-    print(f"\nTraining on data from {args.start} to {args.end}")
-    print(f"Predicting regime for: {predict_dt.strftime('%Y-%m-%d')}\n")
-
-    res = run_pipeline(symbols=stocks + crypto, start=args.start, end=args.end, vol_window=50, n_states=3)
+    res = run_pipeline(symbols=stocks + crypto, start=args.start, end=args.end, vol_window=30, n_states=3)
 
     evaluate_run(res=res)
 
-    print_today_tomorrow_predictions(res=res)
+    inf = RegimeInference(res)
+    train_end = str(pd.Timestamp(res["wide"].index[-1]).date())
+    print(f"\nTraining data ends on: {train_end}\n")
+
+    print_predictions(res, top_k=5)
 
     if args.plot or args.plot_dir:
         print("\n" + "=" * 60)

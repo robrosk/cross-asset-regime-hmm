@@ -4,7 +4,9 @@ from .hmm_model import RegimeHMM
 from .interpret import label_states_cross_asset
 from .pipeline import run_pipeline
 from .config import stocks, crypto
-from .inference import print_today_tomorrow_predictions
+from .inference import print_today_tomorrow_predictions, print_predictions
+from .inference import RegimeInference
+from .predict import predict_today, predict_tomorrow, predict_horizon
 from .evaluate import evaluate_run
 from .visualization import (
     generate_all_plots,
@@ -29,6 +31,11 @@ __all__ = [
     "stocks",
     "crypto",
     "print_today_tomorrow_predictions",
+    "print_predictions",
+    "RegimeInference",
+    "predict_today",
+    "predict_tomorrow",
+    "predict_horizon",
     "evaluate_run",
     "generate_all_plots",
     "plot_regime_timeline",

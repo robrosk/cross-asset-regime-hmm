@@ -21,6 +21,37 @@ from sklearn.metrics import adjusted_rand_score
 from .hmm_model import RegimeHMM
 
 
+def _best_state_permutation(ref_means: np.ndarray, other_means: np.ndarray) -> list[int]:
+    """
+    Find permutation p of states that best aligns other->ref by minimizing L2 distance
+    between emission means. Returns a list p where p[j] = i means other_state j maps to ref_state i.
+    Brute-force permutations are fine for small n_states (<=5 typical here).
+    """
+    import itertools
+
+    k = int(ref_means.shape[0])
+    if other_means.shape[0] != k:
+        raise ValueError("State count mismatch during alignment.")
+
+    best_cost = float("inf")
+    best_perm = list(range(k))
+    for perm in itertools.permutations(range(k)):
+        # perm[i] = which other-state aligns to ref-state i
+        cost = 0.0
+        for ref_i, other_j in enumerate(perm):
+            d = ref_means[ref_i] - other_means[other_j]
+            cost += float(np.dot(d, d))
+        if cost < best_cost:
+            best_cost = cost
+            best_perm = list(perm)
+
+    # invert to mapping other_state -> ref_state
+    inv = [0] * k
+    for ref_i, other_j in enumerate(best_perm):
+        inv[other_j] = ref_i
+    return inv
+
+
 def _run_lengths(labels: Iterable) -> list[int]:
     labels = list(labels)
     if not labels:
@@ -109,6 +140,8 @@ def evaluate_run(
 
     base_states = wide["state"].to_numpy()
     ari_scores: list[float] = []
+    ari_aligned_scores: list[float] = []
+    ll_refits: list[float] = []
     cov_type = getattr(model.model, "covariance_type", "diag")
     n_iter = int(getattr(model.model, "n_iter", 200))
     n_states = int(getattr(model.model, "n_components", 3))
@@ -117,8 +150,14 @@ def evaluate_run(
     for s in seeds:
         m = RegimeHMM(n_states=n_states, covariance_type=cov_type, n_iter=n_iter, random_state=int(s))
         m.fit(X_scaled)
+        ll_refits.append(_get_model_ll(m, X_scaled))
         st = m.predict_states(X_scaled)
         ari_scores.append(float(adjusted_rand_score(base_states, st)))
+
+        # Align state IDs before ARI (HMM state labels are permutation-invariant)
+        p = _best_state_permutation(model.means_, m.means_)
+        st_aligned = np.vectorize(lambda x: p[int(x)])(st)
+        ari_aligned_scores.append(float(adjusted_rand_score(base_states, st_aligned)))
     dt = float(time.time() - t0)
 
     # Print compact report
@@ -135,9 +174,17 @@ def evaluate_run(
     print(f"- Average regime duration (run length): {avg_run:.2f} days (median {med_run:.0f})")
     print(f"- Transition matrix: mean(diagonal)={diag_mean:.3f}, max(off-diagonal)={max_offdiag:.3f}")
     if ari_scores:
-        print(f"- Stability across seeds (ARI vs baseline, n={len(ari_scores)}): "
-              f"mean={np.mean(ari_scores):.3f}, min={np.min(ari_scores):.3f}, max={np.max(ari_scores):.3f} "
-              f"(~{dt:.1f}s)")
+        print(
+            f"- Stability across seeds (ARI vs baseline, n={len(ari_scores)}): "
+            f"raw mean={np.mean(ari_scores):.3f}, aligned mean={np.mean(ari_aligned_scores):.3f} "
+            f"(raw min={np.min(ari_scores):.3f}, aligned min={np.min(ari_aligned_scores):.3f}) "
+            f"(~{dt:.1f}s)"
+        )
+        if ll_refits:
+            print(
+                f"- Refit restarts (log-likelihood): "
+                f"best={np.max(ll_refits):,.2f}, median={np.median(ll_refits):,.2f}, worst={np.min(ll_refits):,.2f}"
+            )
     print("=" * 72 + "\n")
 
 

@@ -49,7 +49,7 @@ def run_pipeline(
     X_scaled = scaler.fit_transform(X)
 
     # Train HMM + decode states
-    hmm_model = RegimeHMM(n_states=n_states, covariance_type="diag")
+    hmm_model = RegimeHMM(n_states=n_states, covariance_type="full")
     hmm_model.fit(X_scaled)
 
     states = hmm_model.predict_states(X_scaled)
