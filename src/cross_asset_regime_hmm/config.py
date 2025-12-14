@@ -1,0 +1,2 @@
+stocks = []
+crypto = ['BTC-USD']
