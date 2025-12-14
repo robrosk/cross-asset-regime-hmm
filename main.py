@@ -16,6 +16,12 @@ def main():
         default=None,
         help="Symbols to include (space-separated), e.g. --symbols SPY QQQ BTC-USD",
     )
+    parser.add_argument(
+        "--vol-window",
+        type=int,
+        default=30,
+        help="Rolling volatility window length (days). Controls how many past days are used for rolling volatility.",
+    )
     parser.add_argument("--plot", action="store_true", help="Generate visualization plots")
     parser.add_argument(
         "--plot-dir",
@@ -47,7 +53,8 @@ def main():
     symbols = args.symbols if args.symbols is not None else (stocks + crypto)
     print(f"Symbols: {symbols}\n")
 
-    res = run_pipeline(symbols=symbols, start=args.start, end=args.end, vol_window=50, n_states=3)
+    print(f"vol_window: {args.vol_window}\n")
+    res = run_pipeline(symbols=symbols, start=args.start, end=args.end, vol_window=args.vol_window, n_states=3)
 
     evaluate_run(res=res)
 

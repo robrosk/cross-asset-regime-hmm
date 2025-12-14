@@ -64,6 +64,31 @@ What it does:
 - Prints a regime forecast summary:
   - Today, tomorrow, next week, next month, then monthly horizons out to ~1 year
 
+### `--vol-window` (rolling volatility window)
+
+We model each day using two features: **daily log return** and **rolling volatility**.  
+`--vol-window` controls how many past days are used to compute rolling volatility:
+
+- **Smaller window** (e.g., **5–10 days**) → volatility reacts faster to recent moves
+  - Detects shocks quickly
+  - Regimes may switch more often (more “choppy” state timeline)
+
+- **Medium window** (e.g., **20 days**) → balanced, common default
+  - Captures “monthly-ish” volatility shifts
+  - Typically smoother regimes than 5–10
+
+- **Larger window** (e.g., **40–60+ days**) → volatility changes slowly
+  - Regimes tend to be more persistent
+  - Turning points can lag (volatility stays elevated after markets calm)
+
+Rule of thumb: pick a window that matches the timescale you want “regime” to mean (**weekly vs monthly vs quarterly**).
+
+Example:
+
+```bash
+python main.py --start 2021-01-01 --end 2025-12-14 --symbols SPY QQQ BTC-USD --vol-window 20
+```
+
 ### Plotting
 
 - **Show plots (no saving):**
