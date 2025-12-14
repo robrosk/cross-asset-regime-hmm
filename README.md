@@ -43,6 +43,21 @@ The main entrypoint is `main.py`. You must provide a start and end date:
 python main.py --start 2021-01-01 --end 2025-12-14
 ```
 
+### Choose symbols from the CLI
+
+By default the CLI uses the repo’s configured symbol lists (`stocks + crypto`).  
+To override from the command line, pass `--symbols` (space-separated):
+
+```bash
+python main.py --start 2021-01-01 --end 2025-12-14 --symbols SPY QQQ BTC-USD ETH-USD
+```
+
+Tip: symbols like `BTC-USD` are fine unquoted in most shells, but quoting is also safe:
+
+```bash
+python main.py --start 2021-01-01 --end 2025-12-14 --symbols "BTC-USD" "ETH-USD"
+```
+
 What it does:
 - Trains the model on the aligned dataset ending at the last available common date
 - Prints an evaluation report

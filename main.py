@@ -10,6 +10,12 @@ def main():
 
     parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
     parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
+    parser.add_argument(
+        "--symbols",
+        nargs="+",
+        default=None,
+        help="Symbols to include (space-separated), e.g. --symbols SPY QQQ BTC-USD",
+    )
     parser.add_argument("--plot", action="store_true", help="Generate visualization plots")
     parser.add_argument(
         "--plot-dir",
@@ -39,7 +45,10 @@ def main():
     _ = datetime.strptime(args.end, "%Y-%m-%d")  # validate format
     print(f"\nRequested window: {args.start} -> {args.end}")
 
-    res = run_pipeline(symbols=stocks + crypto, start=args.start, end=args.end, vol_window=30, n_states=3)
+    symbols = args.symbols if args.symbols is not None else (stocks + crypto)
+    print(f"Symbols: {symbols}\n")
+
+    res = run_pipeline(symbols=symbols, start=args.start, end=args.end, vol_window=30, n_states=3)
 
     evaluate_run(res=res)
 
