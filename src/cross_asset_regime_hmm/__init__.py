@@ -5,6 +5,16 @@ from .interpret import label_states_cross_asset
 from .pipeline import run_pipeline
 from .config import stocks, crypto
 from .inference import print_today_tomorrow_predictions
+from .visualization import (
+    generate_all_plots,
+    plot_regime_timeline,
+    plot_price_with_regimes,
+    plot_regime_distributions,
+    plot_aggregate_regime_distributions,
+    plot_transition_matrix,
+    plot_state_occupancy,
+    plot_cross_asset_coherence,
+)
 
 __all__ = [
     "load_ohlcv_yfinance",
@@ -17,5 +27,13 @@ __all__ = [
     "run_pipeline",
     "stocks",
     "crypto",
-    "print_today_tomorrow_predictions"
+    "print_today_tomorrow_predictions",
+    "generate_all_plots",
+    "plot_regime_timeline",
+    "plot_price_with_regimes",
+    "plot_regime_distributions",
+    "plot_aggregate_regime_distributions",
+    "plot_transition_matrix",
+    "plot_state_occupancy",
+    "plot_cross_asset_coherence",
 ]
