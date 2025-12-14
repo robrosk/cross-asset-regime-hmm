@@ -1,44 +1,78 @@
 from .data_source import load_ohlcv_yfinance
-from .features import add_log_return, add_rolling_vol
+from .features import add_features, align_to_common_dates
+from .hmm_model import RegimeHMM
+from .interpret import label_states_cross_asset
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 
-def run_pipeline(symbols: list[str], start: str, end: str, vol_window: int = 10, n_states: int = 3):
+def run_pipeline(
+    symbols: list[str],
+    start: str,
+    end: str,
+    vol_window: int = 10,
+    n_states: int = 3,
+):
     """
-    Download data for each symbol, build features, and return per-symbol matrices.
-    Raises on missing data/columns so issues are surfaced immediately.
+    Download data for each symbol, build features, align to common dates (intersection),
+    train a cross-asset HMM, label regimes, and return results.
     """
     data = load_ohlcv_yfinance(symbols, start, end)
     if not data:
         raise ValueError("No data returned from load_ohlcv_yfinance.")
 
-    results = {}
-    required_cols = ["log_return", "roll_vol"]
+    feature_cols_per_asset = ["log_return", "roll_vol"]
+    data = add_features(data, feature_cols_per_asset, vol_window, n_states)
 
-    for sym, df in data.items():
-        if df is None or df.empty:
-            raise ValueError(f"{sym}: no data returned.")
+    # Align all symbols to common dates (intersection) and rebuild per-asset feature matrices
+    data = align_to_common_dates(data)
 
-        df = df.copy()
-        if "price" not in df.columns:
-            raise KeyError(f"{sym}: missing 'price' column after standardization. Columns: {list(df.columns)}")
+    # Build a wide dataframe (guarantees date/row alignment)
+    common_index = data[symbols[0]]["data"].index
+    wide = pd.DataFrame(index=common_index)
 
-        df = add_log_return(df)                          # adds df["log_return"]
-        df = add_rolling_vol(df, window=vol_window)      # adds df["roll_vol"]
+    # Keep a consistent column order: (ret, vol) per symbol
+    wide_feature_cols: list[str] = []
+    for sym in symbols:
+        df = data[sym]["data"]
+        wide[f"{sym}_log_return"] = df["log_return"].to_numpy()
+        wide[f"{sym}_roll_vol"] = df["roll_vol"].to_numpy()
+        wide_feature_cols += [f"{sym}_log_return", f"{sym}_roll_vol"]
 
-        missing = [c for c in required_cols if c not in df.columns]
-        if missing:
-            raise KeyError(f"{sym}: missing columns after feature engineering: {missing}. Columns: {list(df.columns)}")
+    # Feature matrix for HMM: shape (n_timesteps, 2 * n_assets)
+    X = wide[wide_feature_cols].to_numpy()
 
-        df_feat = df.dropna(subset=required_cols).copy()
-        if df_feat.empty:
-            raise ValueError(f"{sym}: all rows dropped during feature cleaning.")
+    # Scale features for stable training
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-        X = df_feat[required_cols].to_numpy()
+    # Train HMM + decode states
+    hmm_model = RegimeHMM(n_states=n_states, covariance_type="diag")
+    hmm_model.fit(X_scaled)
 
-        results[sym] = {
-            "symbol": sym,
-            "features": X,
-            "data": df_feat,
-        }
+    states = hmm_model.predict_states(X_scaled)
+    wide["state"] = states
 
-    return results
+    # Cross-asset labeling using model means and known feature layout
+    n_assets = len(symbols)
+    return_indices = [2 * i for i in range(n_assets)]      # indices of each asset's return feature in X
+    vol_indices = [2 * i + 1 for i in range(n_assets)]     # indices of each asset's vol feature in X
+
+    label_map = label_states_cross_asset(
+        means=hmm_model.means_,          # in scaled feature space (fine for ranking/labeling)
+        n_states=n_states,
+        return_indices=return_indices,
+        vol_indices=vol_indices,
+    )
+    wide["regime"] = wide["state"].map(label_map)
+
+    return {
+        "wide": wide,
+        "per_asset": data,
+        "model": hmm_model,
+        "scaler": scaler,
+        "label_map": label_map,
+        "wide_feature_cols": wide_feature_cols,
+    }

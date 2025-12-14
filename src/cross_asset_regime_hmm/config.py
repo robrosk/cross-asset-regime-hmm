@@ -1,2 +1,2 @@
-stocks = []
-crypto = ['BTC-USD']
+stocks = ['SPY']
+crypto = ['BTC-USD', 'ETH-USD']
