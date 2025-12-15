@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 import numpy as np
 import pandas as pd
 
@@ -32,7 +34,7 @@ def print_predictions(
     res: dict,
     *,
     top_k: int = 5,
-    horizons_days: list[int] | None = None,
+    horizons_days: Optional[List[int]] = None,
 ) -> None:
     """
     CLI print helper.
