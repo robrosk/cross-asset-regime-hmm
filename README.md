@@ -17,6 +17,17 @@ At a high level:
 
 This repo is actively evolving: features, labeling, and model-selection logic will change as the project matures.
 
+## What the HMM is doing (in plain English)
+
+An HMM assumes there is a **hidden regime/state** (e.g., “Bull”, “Bear”, “Volatile”) that you don’t directly observe.  
+What you *do* observe each day is a feature vector (here: **log returns** and **rolling volatility** across assets).
+
+The model learns:
+- A **transition matrix** \(A\): how likely regimes are to persist or switch (e.g., “Volatile” → “Volatile”)
+- **Emission distributions**: for each regime, what returns/volatility “typically look like”
+
+Forecasts are usually dominated by **regime persistence** unless the observed features strongly suggest a switch.
+
 ## Critical Disclaimer (Please Read)
 
 This is a **Hidden Markov Model** trained purely on **historical market evidence** (returns/volatility). It:
@@ -87,6 +98,28 @@ Example:
 
 ```bash
 python main.py --start 2021-01-01 --end 2025-12-14 --symbols SPY QQQ BTC-USD --vol-window 20
+```
+
+### `--covariance-type` (HMM emission covariance)
+
+The HMM uses Gaussian emissions. `--covariance-type` controls the **shape/flexibility** of the covariance matrix used to model the feature vector inside each regime:
+
+- **`full`**: each regime has a full covariance matrix (features can be correlated)
+  - Most flexible, but easiest to overfit with limited data
+
+- **`diag`**: each regime has a diagonal covariance (features treated as independent given the regime)
+  - Often more stable; good default when you have many features or noisy data
+
+- **`tied`**: all regimes share one full covariance matrix
+  - Can be a good compromise: correlated features, fewer parameters than `full`
+
+- **`spherical`**: each regime has a single variance value shared across all features
+  - Strong regularization; often too restrictive but can help with stability
+
+Example:
+
+```bash
+python main.py --start 2021-01-01 --end 2025-12-14 --symbols SPY QQQ BTC-USD --vol-window 20 --covariance-type diag
 ```
 
 ### Plotting

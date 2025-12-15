@@ -14,6 +14,7 @@ def run_pipeline(
     end: str,
     vol_window: int = 10,
     n_states: int = 3,
+    covariance_type: str = "full",
 ):
     """
     Download data for each symbol, build features, align to common dates (intersection),
@@ -49,7 +50,7 @@ def run_pipeline(
     X_scaled = scaler.fit_transform(X)
 
     # Train HMM + decode states
-    hmm_model = RegimeHMM(n_states=n_states, covariance_type="full")
+    hmm_model = RegimeHMM(n_states=n_states, covariance_type=covariance_type)
     hmm_model.fit(X_scaled)
 
     states = hmm_model.predict_states(X_scaled)
