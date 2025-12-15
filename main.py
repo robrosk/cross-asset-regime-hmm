@@ -47,6 +47,7 @@ def main():
         stocks,
         crypto,
         run_pipeline,
+        run_pipeline_walk_forward,
         print_predictions,
         generate_all_plots,
         evaluate_run,

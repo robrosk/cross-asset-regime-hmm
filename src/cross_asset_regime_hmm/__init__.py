@@ -3,6 +3,7 @@ from .features import add_log_return, add_rolling_vol, build_feature_matrix
 from .hmm_model import RegimeHMM
 from .interpret import label_states_cross_asset
 from .pipeline import run_pipeline
+from .walk_forward import run_pipeline_walk_forward
 from .config import stocks, crypto
 from .inference import print_today_tomorrow_predictions, print_predictions
 from .inference import RegimeInference
@@ -28,6 +29,7 @@ __all__ = [
     "RegimeHMM",
     "label_states_cross_asset",
     "run_pipeline",
+    "run_pipeline_walk_forward",
     "stocks",
     "crypto",
     "print_today_tomorrow_predictions",
