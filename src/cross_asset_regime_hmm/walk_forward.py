@@ -22,10 +22,10 @@ def run_pipeline_walk_forward(
     window_size: int = 252,
 ) -> Dict:
     """
-    Walk-forward pipeline to prevent look-ahead bias.
+    Walk-forward pipeline (expanding window) to prevent look-ahead bias.
 
     For each time step t >= window_size:
-      - fit scaler + HMM on the past `window_size` rows (historical only)
+      - fit scaler + HMM on all historical rows up to t (expanding window)
       - predict the state for day t using that model (one-step ahead)
 
     Returns a dict similar to `run_pipeline`, with wide["state"]/wide["regime"]
@@ -73,7 +73,8 @@ def run_pipeline_walk_forward(
     vol_indices = [2 * i + 1 for i in range(n_assets)]
 
     for t in range(window_size, n_rows):
-        X_hist = X[t - window_size : t]
+        # Expanding window: use all data up to (but not including) t
+        X_hist = X[:t]
 
         scaler = StandardScaler().fit(X_hist)
         X_hist_scaled = scaler.transform(X_hist)
